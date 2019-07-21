@@ -262,3 +262,120 @@ class ComponenteEnrutamientoClass{
     }
 }
 ```
+
+- - - 
+
+### QUINTO PUNTO
+El quinto punto habla de dos classes controlador y dice de ambas
+
+> ..que tengan al menos **una función llamada indexAction**..
+
+Sobre esta función, nos aclara
+
+> ..que reciba un único parámetro llamado _request_..
+
+Y sobre el parámetro nos comenta que
+
+> ..contendrá la información del servidor relativa a la petición HTTP..
+
+#### TEORÍA DEL QUINTO PUNTO
+Volvamos nuevamente a la teoría del SEGUNDO PUNTO:
+
+> 1. Controladores crean la respuesta a peticiones
+> 1. La acción index de un controlador muestra la página en su estado por defecto
+
+Si a ello le añadimos lo que ya decíamos en el primer punto:
+
+> **podemos asumir** sin objeciones que se está obteniendo una información que visiblemente venía del servidor (`$_SERVER`) y que además guarda relación con la _request_ (`$request`).
+
+
+#### PLANTEANDO EL QUINTO PUNTO
+En este quinto punto repetiremos la misma fórmula que para crear la clase correspondiente al _componente de enrutamiento_, crearemos una clase por cada controlador.
+
+En cada clase de controlador crearemos una función indexAction.
+
+Llegados a este punto, cabría recordar en qué punto tendríamos el código del controlador frontal.  
+Deberíamos tener algo como:
+
+```
+// SOLUCIÓN AL PUNTO 1
+$ruta = $request->getPathInfo();
+
+// SOLUCIÓN AL PUNTO 4
+$componente_enrutamiento = new ComponenteEnrutamientoClass();
+
+// SOLUCIÓN AL PUNTO 2 ACTUALIZADA POR EL PUNTO 4
+$controlador = $componente_enrutamiento->getController($ruta);
+$accion = $componente_enrutamiento->getAction($ruta);
+
+// SOLUCIÓN AL PUNTO 3
+$controlador->ejecutarAccion($accion,$request);
+
+```
+
+Si nos fijamos bien, habíamos propuesto como solución una función llamada `ejecutarAccion`.   
+Esta función ejecutaba la función correspondiente a una acción en el controlador.
+
+El caso es que esta función se la habíamos asignado al `$controlador`, y por lo tanto tendremos que añadirla a las clases controlador que propongamos en la solución.
+
+La única incógnita que nos queda por solucionar es:  
+**¿Cómo se puede llamar a la función `indexAction` desde dentro de la función `ejecutarAccion`?**.
+
+La respuesta a esta **importante incógnica** es la misma que aplicaba en Javascript, la variable `this`.  
+En el caso de _php_, como es una variable se llama `$this`, y se explica en [esta página de php.net](https://www.php.net/manual/es/language.oop5.basic.php).
+
+Esta variable se puede usar desde dentro de cualquier función de un objeto, y la variable guarda al propio objeto, con lo que se puede usar `$this` como se usaría el propio objeto. Por lo tanto, **si el objeto tiene una función llamada `indexAction`, la variable `$this` tendrá la misma función**.
+
+
+#### SOLUCIÓN AL QUINTO PUNTO
+Como hemos visto, habrá que crear dos clases, con la función indexAction y la función ejecutarAccion:
+
+```
+class homeController{
+
+    function indexAction($request){
+    	// código que muestra la página en su estado por defecto
+    }
+
+    function ejecutarAccion($accion, $request){
+    	// código que ejecuta la acción que nos digan
+    }
+}
+```
+
+Ahora nos falta trasladar aquél código que en el PUNTO TERCERO habíamos eliminado, dentro de la función `indexAction`:
+
+```
+function indexAction($request){
+    $response = new BinaryFileResponse(__DIR__.'/view/home.html');
+    $response->send();
+}
+```
+
+Resta por hacer la función `ejecutaAccion`, que quedaría como:
+
+```
+function ejecutaAccion($accion,$request){
+    if ($accion == 'index'){
+        $this->indexAction($request);
+    }
+}
+```
+
+Y para concluir, el mismo código serviría para el otro controller:
+
+```
+class errorController{
+
+    function indexAction($request){
+        $response = new BinaryFileResponse(__DIR__.'/view/error.html');
+        $response->send();
+    }
+
+    function ejecutarAccion($accion, $request){
+        if ($accion == 'index'){
+            $this->indexAction($request);
+        }
+    }
+}
+```
