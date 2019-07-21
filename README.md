@@ -87,3 +87,50 @@ La solución quedaría:
 $controlador = $componente_enrutamiento->determinarControlador($ruta);
 $accion = $componente_enrutamiento->determinarAccion($ruta, $controlador);
 ```
+
+- - - 
+
+### TERCER PUNTO
+El tercer punto habla nuevamente del _Front Controller_ y dice de él
+
+> ..**responda a la petición** (...) por medio de la **delegación en otro controlador**
+
+Y también se explica que
+> ..**responda a la petición** (...) **ejecutando una acción en este controlador**..
+
+#### TEORÍA DEL TERCER PUNTO
+Si cogemos al pié de la letra la teoría del segundo punto, la podemos resumir como:
+
+1. Solo hay un único front controller
+1. Controladores crean la respuesta a peticiones
+1. El trabajo de responder a una petición se reparte entre especialistas
+1. Cada ruta lleva a una página
+1. Cada página tiene un controlador
+1. La acción index de un controlador muestra la página en su estado por defecto
+1. Las otras acciones de un controlador muestran la página en otros estados
+
+Esta misma teoría nos sirve ahora para plantear este tercer punto. 
+
+#### PLANTEANDO EL TERCER PUNTO
+En el segundo punto habíamos creado una variable `$controlador` que era el controlador responsable (**especialista**) de atender la petición (**crear la respuesta**).
+
+Ahora se nos aclara que, aunque el controlador cree la petición, **también la enviará** (delegado en responder a la petición), por lo tanto habrá que **eliminar del controlador frontal cualquier intento de envio de una respuesta**.
+
+Finalmente se nos dice que la respuesta a se enviará ejecutando una acción.  
+Esta acción es con toda probabilidad la que había determinado el _componente de enrutamiento_, cuando hacíamos `$accion = $componente_enrutamiento->determinarAccion($ruta, $controlador);`.
+
+Partiendo de esta base sabemos ya que existe una variable `$request` dentro del _front controller_, y que esta variable representa la petición HTTP dentro de la aplicación.  
+Por otro lado, carecemos de conocimiento sobre cómo se determinará el _controlador delegado_ pero sabemos que será un _controller_ y también sabemos que quien lo determinará será este "misterioso" componente.
+
+Por lo tanto almenos partiremos de que **conseguiremos un controlador** y que este controlador **atenderá a la petición (respondiéndola)**.
+
+#### SOLUCIÓN AL TERCER PUNTO
+La solución al tercer punto deberá ocupar el último lugar dentro del código del controlador frontal, porque el envío de la respuesta es lo último que sucedía, y es lo que justamente vamos a reemplazar.
+
+Por lo tanto podemos expresar la conclusión alcanzada usando variables que tengan objetos con funciones. Y ejecutando estas funciones a nuestra conveniencia. 
+
+Nos podría quedar algo como
+
+```
+$controlador->ejecutarAccion($accion,$request);
+```
