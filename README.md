@@ -134,3 +134,131 @@ Nos podría quedar algo como
 ```
 $controlador->ejecutarAccion($accion,$request);
 ```
+
+- - - 
+
+### CUARTO PUNTO
+El cuarto punto habla del misterioso _Componente de enrutamiento_ y dice de él
+
+> ..**una clase correspondiente a un componente de enrutamiento**..
+
+> ..dotado de las **funciones getController y getAction**..
+
+> ..recibirán como **parámetro un string llamado url**..
+
+A parte se nos dice de la función getController
+
+> ..devolverá el FQDN de una clase controller..
+
+Finalmente se nos dice de la función getAction
+
+> ..devolverá un string..
+
+#### TEORÍA DEL CUARTO PUNTO
+Uno de los conceptos fundamentales de las clases es que: **las clases agrupan las propiedades y los métodos de los objetos** que podremos crear con ellas (`$objeto = new Class();`).
+
+Otro concepto teórico importante es que las **funciones pueden tener un valor de retorno** (`return`).
+
+Y finalmente sabemos que, en programación, **los valores tienen un tipo de datos**.
+
+A todo lo anterior necesitaremos aclarar qué tipo de datos es "_FQDN_".
+Como se ha dicho es la ruta completa hacia un archivo, y por lo tanto el mejor tipo de datos que pueda corresponderle es un _string_.
+
+#### PLANTEANDO EL CUARTO PUNTO
+Si las clases sirven para agrupar propiedades y métodos, y nos dicen dos métodos de la clase componente de enrutamiento, habrá que plantear la creación de una clase con estas dos funciones.
+
+Como la primera función (`getController`) debe devolver un `string` con el _FQDN_ de un _controller_, habrá que devolver la ruta entera a un _controller_; que será un archivo `.php` guardado dentro de la carpeta `src/controller`.  
+Y en tanto que la segunda devolverá un _string_, este _string_ debería coincidir con una acción de un controller.
+
+Sentado lo anterior, si revisamos la solución del SEGUNDO PUNTO..
+
+```
+$controlador = $componente_enrutamiento->determinarControlador($ruta);
+$accion = $componente_enrutamiento->determinarAccion($ruta, $controlador);
+```
+
+..nos damos cuenta de que hay un parámetro que se repite, que es $ruta.
+
+$ruta no deja de ser un trozo de URL (el mas significativo) y podría encajar con este parámetro $url.  
+Pero **¿qué hacemos entonces con el parámetro `$controlador`?**
+
+Si nos paramos a pensar, si el componente de enrutamiento es capaz de "determinar un controlador a partir de una ruta", debería ser capaz de "determinar una acción a partir únicamente de una ruta", porque el controlador ya lo puede averiguar por sí mismo.
+
+Si replateáramos las dos llamadas a funciones podrían quedar como:
+
+```
+$controlador = $componente_enrutamiento->determinarControlador($ruta);
+$accion = $componente_enrutamiento->determinarAccion($ruta);
+```
+
+Como existe una analogía entre ambas funciones (`determinarControlador` y `determinarAccion`) con las de este punto, lo que se puede hacer es substituirlas en el _front controller_.
+
+Finalmente, habrá que hacer que las funciones determinen el controlador y la acción en función del valor de esta `$ruta`, que será recibida como `$url`.
+
+#### SOLUCIÓN AL CUARTO PUNTO
+Lo primero que habría que hacer es modificar el _front controller_ y dejar las líneas a reemplazar como:
+
+```
+$controlador = $componente_enrutamiento->getController($ruta);
+$accion = $componente_enrutamiento->getAction($ruta);
+```
+
+Además, como sabemos ya que **el componente de enrutamiento tendrá una clase**, podremos crear un objeto de esa clase y asignarselo a la variable `$componente_enrutamiento`, inmediatamente antes de usarlo:
+
+```
+$componente_enrutamiento = new ComponenteEnrutamientoClass();
+```
+
+Ahora bastará con definir esta clase en un archivo a parte, y (elegimos `src` para guardarlo):
+
+```
+class ComponenteEnrutamientoClass{
+    // Código con las funciones pendientes
+}
+```
+
+y finalmente, dentro de esta clase habrá que crear las dos funciones:
+
+```
+function getController($url){
+	if ($url == "/home"){
+		$fqdn = __DIR__."/controller/homeController.php";		
+	}
+	else{
+		$fqdn = __DIR__."/controller/errorController.php";
+	}
+	return $fqdn;
+}
+```
+
+```
+function getAction($url){
+	return "index";
+}
+```
+
+En la primera se usa la $ruta a través del parámetro $url, determinando qué controller usaremos según la ruta.
+
+En la segunda, como presuponemos que ambos controllers tendrán la acción `indexAction` para mostrar la página "home" y "error", respectivamente, en su estado por defecto.
+
+**En definitiva, nos quedará:**
+
+```
+class ComponenteEnrutamientoClass{
+
+    function getController($url){
+	    if ($url == "/home"){
+		    $fqdn = __DIR__."/controller/homeController.php";		
+	    }
+	    else{
+		    $fqdn = __DIR__."/controller/errorController.php";
+	    }
+	    return $fqdn;
+    }
+
+
+    function getAction($url){
+	    return "index";
+    }
+}
+```
